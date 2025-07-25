@@ -33,7 +33,7 @@ struct Basic {
 #[derive(Debug, Tabled, Clone)]
 struct Size {
     #[tabled(rename = "Size")]
-    size: u64,
+    size: String,
 }
 
 #[derive(Debug, Tabled, Clone)]
@@ -57,6 +57,8 @@ struct Permission {
 struct Cli {
     path: Option<PathBuf>,
     #[arg(short, long)]
+    all: bool,
+    #[arg(short, long)]
     permission: bool,
     #[arg(short, long)]
     size: bool,
@@ -71,7 +73,7 @@ fn main() {
     println!("Path: {}", path.display());
     if let Ok(is_exist) = fs::exists(&path) {
         if is_exist {
-            let files = get_files(&path);
+            let files = get_files(&path, cli.all);
 
             if cli.permission && cli.size && cli.modified_time {
                 // Show all fields
@@ -172,19 +174,24 @@ fn main() {
     }
 }
 
-fn get_files(path: &Path) -> Vec<(Basic, Size, Modified, Permission)> {
+fn get_files(path: &Path, show_hidden: bool) -> Vec<(Basic, Size, Modified, Permission)> {
     let mut data = Vec::new();
 
     if let Ok(directory) = fs::read_dir(path) {
         for value in directory {
             if let Ok(file) = value {
                 if let Ok(meta) = fs::metadata(&file.path()) {
-                    data.push((
-                        basic_mode(&file, &meta),
-                        size_mode(&meta),
-                        modified_mode(&meta),
-                        permission_mode(&meta),
-                    ));
+                    let file_name = file.file_name().into_string().unwrap_or_default();
+
+                    // Skip hidden files until -a
+                    if show_hidden || !file_name.starts_with('.') {
+                        data.push((
+                            basic_mode(&file, &meta),
+                            size_mode(&meta),
+                            modified_mode(&meta),
+                            permission_mode(&meta),
+                        ));
+                    }
                 }
             }
         }
@@ -207,7 +214,9 @@ fn basic_mode(file: &DirEntry, meta: &Metadata) -> Basic {
 }
 
 fn size_mode(meta: &Metadata) -> Size {
-    Size { size: meta.len() }
+    Size {
+        size: human_readable_size(meta.len()),
+    }
 }
 
 fn modified_mode(meta: &Metadata) -> Modified {
@@ -247,5 +256,23 @@ fn permission_mode(meta: &Metadata) -> Permission {
 
     Permission {
         permission: perm_string,
+    }
+}
+
+fn human_readable_size(bytes: u64) -> String {
+    const UNITS: [&str; 6] = ["B", "K", "M", "G", "T", "P"];
+    let mut size = bytes as f64;
+    let mut unit_index = 0;
+
+    while size >= 1024.0 && unit_index < UNITS.len() - 1 {
+        size /= 1024.0;
+        unit_index += 1;
+    }
+
+    // Show 1 decimal place only if needed
+    if size >= 10.0 || unit_index == 0 {
+        format!("{:.0}{}", size, UNITS[unit_index])
+    } else {
+        format!("{:.1}{}", size, UNITS[unit_index])
     }
 }
