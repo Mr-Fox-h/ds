@@ -27,7 +27,7 @@ enum Types {
 #[derive(Debug, Clone, ValueEnum)]
 enum SortField {
     Name,
-    Content,
+    Size,
     Extension,
     Modified,
     Changed,
@@ -47,9 +47,9 @@ struct Basic {
 }
 
 #[derive(Debug, Tabled, Clone)]
-struct Content {
-    #[tabled(rename = "Content")]
-    content: String,
+struct Size {
+    #[tabled(rename = "Size")]
+    size: String,
 }
 
 #[derive(Debug, Tabled, Clone)]
@@ -64,11 +64,17 @@ struct Permission {
     permission: String,
 }
 
+#[derive(Debug, Tabled, Clone)]
+struct Binary {
+    #[tabled(rename = "Binary")]
+    size: String,
+}
+
 #[derive(Debug, Parser)]
 #[command(
     version,
     about,
-    long_about = "List directory contents with various display options.\n\n\
+    long_about = "List directory sizes with various display options.\n\n\
     A modern replacement for 'ls' with colorful output and additional features."
 )]
 struct Cli {
@@ -77,8 +83,10 @@ struct Cli {
     all: bool,
     #[arg(short, long, help = "Show file permissions in Unix format")]
     permission: bool,
-    #[arg(short, long, help = "Show file sizes (content)")]
-    content: bool,
+    #[arg(short, long, help = "Show file sizes (size)")]
+    size: bool,
+    #[arg(short, long, help = "list file sizes with binary prefixes")]
+    binary: bool,
     #[arg(short, long, help = "Show last modification time")]
     modified_time: bool,
     #[arg(short, long, help = "Reverse the sort order")]
@@ -86,14 +94,14 @@ struct Cli {
     #[arg(short, long, help = "Show directories only")]
     dirs: bool,
     #[arg(
-        short,
+        short = 'S',
         long,
         value_enum,
         default_value = "name",
         help = "Sort by specific field",
         long_help = "Sort criteria:\n\
         - name: Alphabetical order\n\
-        - content: File size\n\
+        - size: File size\n\
         - extension: File extension\n\
         - modified: Last modification time\n\
         - changed: Last status change time\n\
@@ -124,9 +132,51 @@ fn main() {
                 cli.git_ignore,
             );
 
-            if cli.permission && cli.content && cli.modified_time {
+            if cli.permission && cli.size && cli.modified_time && cli.binary {
                 // Show all fields
-                let combined: Vec<(Basic, Content, Modified, Permission)> = files;
+                let combined: Vec<(Basic, Size, Binary, Modified, Permission)> = files;
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(4), Color::FG_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.binary && cli.modified_time {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Size, Binary, Modified)> = files
+                    .into_iter()
+                    .map(|(basic, size, binary, modified, _)| (basic, size, binary, modified))
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::last(), Color::FG_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.binary && cli.permission {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Size, Binary, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, size, binary, _, permission)| (basic, size, binary, permission))
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.modified_time && cli.permission {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Size, Modified, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, size, _, modified, permission)| {
+                        (basic, size, modified, permission)
+                    })
+                    .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
@@ -134,11 +184,62 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.permission && cli.content {
-                // Show permission and content
-                let combined: Vec<(Basic, Content, Permission)> = files
+            } else if cli.binary && cli.modified_time && cli.permission {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Binary, Modified, Permission)> = files
                     .into_iter()
-                    .map(|(basic, content, _, permission)| (basic, content, permission))
+                    .map(|(basic, _, binary, modified, permission)| {
+                        (basic, binary, modified, permission)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.binary {
+                // Show size and binary
+                let combined: Vec<(Basic, Size, Binary)> = files
+                    .into_iter()
+                    .map(|(basic, size, binary, _, _)| (basic, size, binary))
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.binary && cli.modified_time {
+                // Show size and binary
+                let combined: Vec<(Basic, Binary, Modified)> = files
+                    .into_iter()
+                    .map(|(basic, _, binary, modified, _)| (basic, binary, modified))
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::last(), Color::FG_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.binary && cli.permission {
+                // Show binary and permission
+                let combined: Vec<(Basic, Binary, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, _, binary, _, permission)| (basic, binary, permission))
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.permission && cli.size {
+                // Show permission and size
+                let combined: Vec<(Basic, Size, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, size, _, _, permission)| (basic, size, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -150,7 +251,7 @@ fn main() {
                 // Show permission and modified time
                 let combined: Vec<(Basic, Modified, Permission)> = files
                     .into_iter()
-                    .map(|(basic, _, modified, permission)| (basic, modified, permission))
+                    .map(|(basic, _, _, modified, permission)| (basic, modified, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -162,18 +263,18 @@ fn main() {
                 // Show only permission
                 let combined: Vec<(Basic, Permission)> = files
                     .into_iter()
-                    .map(|(basic, _, _, permission)| (basic, permission))
+                    .map(|(basic, _, _, _, permission)| (basic, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.content && cli.modified_time {
-                // Show content and modified time
-                let combined: Vec<(Basic, Content, Modified)> = files
+            } else if cli.size && cli.modified_time {
+                // Show size and modified time
+                let combined: Vec<(Basic, Size, Modified)> = files
                     .into_iter()
-                    .map(|(basic, content, modified, _)| (basic, content, modified))
+                    .map(|(basic, size, _, modified, _)| (basic, size, modified))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -181,11 +282,11 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.content {
-                // Show only content
-                let combined: Vec<(Basic, Content)> = files
+            } else if cli.size {
+                // Show only size
+                let combined: Vec<(Basic, Size)> = files
                     .into_iter()
-                    .map(|(basic, content, _, _)| (basic, content))
+                    .map(|(basic, size, _, _, _)| (basic, size))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -196,17 +297,27 @@ fn main() {
                 // Show only modified time
                 let combined: Vec<(Basic, Modified)> = files
                     .into_iter()
-                    .map(|(basic, _, modified, _)| (basic, modified))
+                    .map(|(basic, _, _, modified, _)| (basic, modified))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
+            } else if cli.binary {
+                let combined: Vec<(Basic, Binary)> = files
+                    .into_iter()
+                    .map(|(basic, _, binary, _, _)| (basic, binary)) // Changed to access binary field
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
             } else {
                 // Show basic info only
                 let basic_info: Vec<Basic> =
-                    files.into_iter().map(|(basic, _, _, _)| basic).collect();
+                    files.into_iter().map(|(basic, _, _, _, _)| basic).collect();
                 let mut table = Table::new(basic_info);
                 table.with(Style::empty());
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
@@ -230,7 +341,7 @@ fn get_files(
     directories_only: bool,
     sort: SortField,
     git_ignore: bool,
-) -> Vec<(Basic, Content, Modified, Permission)> {
+) -> Vec<(Basic, Size, Binary, Modified, Permission)> {
     let mut entries: Vec<_> = fs::read_dir(path)
         .ok()
         .map(|dir| {
@@ -241,9 +352,24 @@ fn get_files(
             })
             .filter(|(entry, meta)| {
                 let file_name = entry.file_name().into_string().unwrap_or_default();
-                (show_hidden || !file_name.starts_with('.'))
-                    && (!directories_only || meta.is_dir())
-                    && (git_ignore && !file_name.eq(".gitignore"))
+
+                if directories_only && meta.is_dir() {
+                    if show_hidden && file_name.starts_with('.') {
+                        return true;
+                    } else if !show_hidden && file_name.starts_with('.') {
+                        return false;
+                    }
+                    return true;
+                }
+                if show_hidden && file_name.starts_with('.') {
+                    if git_ignore && file_name.eq(".gitignore") {
+                        return false;
+                    }
+                    return true;
+                } else if !show_hidden && file_name.starts_with('.') {
+                    return false;
+                }
+                return true;
             })
             .collect()
         })
@@ -254,7 +380,7 @@ fn get_files(
         SortField::Name => {
             entries.sort_by(|a, b| a.0.file_name().cmp(&b.0.file_name()));
         }
-        SortField::Content => {
+        SortField::Size => {
             entries.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
         }
         SortField::Extension => {
@@ -329,7 +455,8 @@ fn get_files(
         .map(|(file, meta)| {
             (
                 basic_mode(&file, &meta),
-                content_mode(&meta),
+                size_mode(&meta),
+                binary_mode(&meta),
                 modified_mode(&meta),
                 permission_mode(&meta),
             )
@@ -351,9 +478,9 @@ fn basic_mode(file: &DirEntry, meta: &Metadata) -> Basic {
     }
 }
 
-fn content_mode(meta: &Metadata) -> Content {
-    Content {
-        content: human_readable_content(meta.len()),
+fn size_mode(meta: &Metadata) -> Size {
+    Size {
+        size: human_readable_size(meta.len()),
     }
 }
 
@@ -397,20 +524,26 @@ fn permission_mode(meta: &Metadata) -> Permission {
     }
 }
 
-fn human_readable_content(bytes: u64) -> String {
+fn binary_mode(meta: &Metadata) -> Binary {
+    Binary {
+        size: meta.len().to_string(),
+    }
+}
+
+fn human_readable_size(bytes: u64) -> String {
     const UNITS: [&str; 6] = ["B", "K", "M", "G", "T", "P"];
-    let mut content = bytes as f64;
+    let mut size = bytes as f64;
     let mut unit_index = 0;
 
-    while content >= 1024.0 && unit_index < UNITS.len() - 1 {
-        content /= 1024.0;
+    while size >= 1024.0 && unit_index < UNITS.len() - 1 {
+        size /= 1024.0;
         unit_index += 1;
     }
 
     // Show 1 decimal place only if needed
-    if content >= 10.0 || unit_index == 0 {
-        format!("{:.0}{}", content, UNITS[unit_index])
+    if size >= 10.0 || unit_index == 0 {
+        format!("{:.0}{}", size, UNITS[unit_index])
     } else {
-        format!("{:.1}{}", content, UNITS[unit_index])
+        format!("{:.1}{}", size, UNITS[unit_index])
     }
 }
