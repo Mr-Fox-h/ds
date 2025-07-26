@@ -17,6 +17,7 @@ use tabled::{
     Table, Tabled,
     settings::{Color, Style, object::Rows},
 };
+use users::{Groups, Users, UsersCache};
 
 #[derive(Debug, Display, Clone)]
 enum Types {
@@ -70,6 +71,14 @@ struct Binary {
     size: String,
 }
 
+#[derive(Debug, Tabled, Clone)]
+struct GroupOwner {
+    #[tabled(rename = "Owner")]
+    owner: String,
+    #[tabled(rename = "Group")]
+    group: String,
+}
+
 #[derive(Debug, Parser)]
 #[command(
     version,
@@ -87,6 +96,8 @@ struct Cli {
     size: bool,
     #[arg(short, long, help = "list file sizes with binary prefixes")]
     binary: bool,
+    #[arg(short = None, long = "og", help = "list each file's group and owenr")]
+    group_and_owner: bool,
     #[arg(short, long, help = "Show last modification time")]
     modified_time: bool,
     #[arg(short, long, help = "Reverse the sort order")]
@@ -132,9 +143,28 @@ fn main() {
                 cli.git_ignore,
             );
 
-            if cli.permission && cli.size && cli.modified_time && cli.binary {
+            if cli.permission && cli.size && cli.modified_time && cli.binary && cli.group_and_owner
+            {
                 // Show all fields
-                let combined: Vec<(Basic, Size, Binary, Modified, Permission)> = files;
+                let combined: Vec<(Basic, Size, Binary, GroupOwner, Modified, Permission)> = files;
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(5), Color::FG_BLUE);
+                table.modify(Columns::one(6), Color::FG_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.permission && cli.size && cli.modified_time && cli.binary {
+                // Show all fields
+                let combined: Vec<(Basic, Size, Binary, Modified, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, size, binary, _, modified, permission)| {
+                        (basic, size, binary, modified, permission)
+                    })
+                    .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
@@ -143,11 +173,81 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
+            } else if cli.size && cli.binary && cli.group_and_owner && cli.modified_time {
+                // Show all fields
+                let combined: Vec<(Basic, Size, Binary, GroupOwner, Modified)> = files
+                    .into_iter()
+                    .map(|(basic, size, binary, group_and_owner, modified, _)| {
+                        (basic, size, binary, group_and_owner, modified)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(5), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.binary && cli.group_and_owner && cli.permission {
+                // Show all fields
+                let combined: Vec<(Basic, Size, Binary, GroupOwner, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, size, binary, group_and_owner, _, permission)| {
+                        (basic, size, binary, group_and_owner, permission)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(5), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.group_and_owner && cli.modified_time && cli.permission {
+                // Show all fields
+                let combined: Vec<(Basic, Size, GroupOwner, Modified, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, size, _, group_and_owner, modified, permission)| {
+                        (basic, size, group_and_owner, modified, permission)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.binary && cli.group_and_owner && cli.modified_time && cli.permission {
+                // Show all fields
+                let combined: Vec<(Basic, Binary, GroupOwner, Modified, Permission)> = files
+                    .into_iter()
+                    .map(
+                        |(basic, _, binary, group_and_owner, modified, permission)| {
+                            (basic, binary, group_and_owner, modified, permission)
+                        },
+                    )
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
             } else if cli.size && cli.binary && cli.modified_time {
                 // Show size, binary and modifier
                 let combined: Vec<(Basic, Size, Binary, Modified)> = files
                     .into_iter()
-                    .map(|(basic, size, binary, modified, _)| (basic, size, binary, modified))
+                    .map(|(basic, size, binary, _, modified, _)| (basic, size, binary, modified))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -156,11 +256,93 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
+            } else if cli.size && cli.binary && cli.group_and_owner {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Size, Binary, GroupOwner)> = files
+                    .into_iter()
+                    .map(|(basic, size, binary, group_and_owner, _, _)| {
+                        (basic, size, binary, group_and_owner)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BLUE);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.group_and_owner && cli.modified_time {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Size, GroupOwner, Modified)> = files
+                    .into_iter()
+                    .map(|(basic, size, _, group_and_owner, modified, _)| {
+                        (basic, size, group_and_owner, modified)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.group_and_owner && cli.permission {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Size, GroupOwner, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, size, _, group_and_owner, _, permission)| {
+                        (basic, size, group_and_owner, permission)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.binary && cli.group_and_owner && cli.modified_time {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Binary, GroupOwner, Modified)> = files
+                    .into_iter()
+                    .map(|(basic, _, binary, group_and_owner, modified, _)| {
+                        (basic, binary, group_and_owner, modified)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.binary && cli.group_and_owner && cli.permission {
+                // Show size, binary and modifier
+                let combined: Vec<(Basic, Binary, GroupOwner, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, _, binary, group_and_owner, _, permission)| {
+                        (basic, binary, group_and_owner, permission)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
             } else if cli.size && cli.binary && cli.permission {
                 // Show size, binary and modifier
                 let combined: Vec<(Basic, Size, Binary, Permission)> = files
                     .into_iter()
-                    .map(|(basic, size, binary, _, permission)| (basic, size, binary, permission))
+                    .map(|(basic, size, binary, _, _, permission)| {
+                        (basic, size, binary, permission)
+                    })
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -173,7 +355,7 @@ fn main() {
                 // Show size, binary and modifier
                 let combined: Vec<(Basic, Size, Modified, Permission)> = files
                     .into_iter()
-                    .map(|(basic, size, _, modified, permission)| {
+                    .map(|(basic, size, _, _, modified, permission)| {
                         (basic, size, modified, permission)
                     })
                     .collect();
@@ -188,7 +370,7 @@ fn main() {
                 // Show size, binary and modifier
                 let combined: Vec<(Basic, Binary, Modified, Permission)> = files
                     .into_iter()
-                    .map(|(basic, _, binary, modified, permission)| {
+                    .map(|(basic, _, binary, _, modified, permission)| {
                         (basic, binary, modified, permission)
                     })
                     .collect();
@@ -203,7 +385,7 @@ fn main() {
                 // Show size and binary
                 let combined: Vec<(Basic, Size, Binary)> = files
                     .into_iter()
-                    .map(|(basic, size, binary, _, _)| (basic, size, binary))
+                    .map(|(basic, size, binary, _, _, _)| (basic, size, binary))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -215,7 +397,7 @@ fn main() {
                 // Show size and binary
                 let combined: Vec<(Basic, Binary, Modified)> = files
                     .into_iter()
-                    .map(|(basic, _, binary, modified, _)| (basic, binary, modified))
+                    .map(|(basic, _, binary, _, modified, _)| (basic, binary, modified))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -227,7 +409,7 @@ fn main() {
                 // Show binary and permission
                 let combined: Vec<(Basic, Binary, Permission)> = files
                     .into_iter()
-                    .map(|(basic, _, binary, _, permission)| (basic, binary, permission))
+                    .map(|(basic, _, binary, _, _, permission)| (basic, binary, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -239,7 +421,7 @@ fn main() {
                 // Show permission and size
                 let combined: Vec<(Basic, Size, Permission)> = files
                     .into_iter()
-                    .map(|(basic, size, _, _, permission)| (basic, size, permission))
+                    .map(|(basic, size, _, _, _, permission)| (basic, size, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -251,7 +433,7 @@ fn main() {
                 // Show permission and modified time
                 let combined: Vec<(Basic, Modified, Permission)> = files
                     .into_iter()
-                    .map(|(basic, _, _, modified, permission)| (basic, modified, permission))
+                    .map(|(basic, _, _, _, modified, permission)| (basic, modified, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -263,7 +445,7 @@ fn main() {
                 // Show only permission
                 let combined: Vec<(Basic, Permission)> = files
                     .into_iter()
-                    .map(|(basic, _, _, _, permission)| (basic, permission))
+                    .map(|(basic, _, _, _, _, permission)| (basic, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -274,7 +456,7 @@ fn main() {
                 // Show size and modified time
                 let combined: Vec<(Basic, Size, Modified)> = files
                     .into_iter()
-                    .map(|(basic, size, _, modified, _)| (basic, size, modified))
+                    .map(|(basic, size, _, _, modified, _)| (basic, size, modified))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -286,7 +468,7 @@ fn main() {
                 // Show only size
                 let combined: Vec<(Basic, Size)> = files
                     .into_iter()
-                    .map(|(basic, size, _, _, _)| (basic, size))
+                    .map(|(basic, size, _, _, _, _)| (basic, size))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -297,7 +479,7 @@ fn main() {
                 // Show only modified time
                 let combined: Vec<(Basic, Modified)> = files
                     .into_iter()
-                    .map(|(basic, _, _, modified, _)| (basic, modified))
+                    .map(|(basic, _, _, _, modified, _)| (basic, modified))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -307,7 +489,7 @@ fn main() {
             } else if cli.binary {
                 let combined: Vec<(Basic, Binary)> = files
                     .into_iter()
-                    .map(|(basic, _, binary, _, _)| (basic, binary)) // Changed to access binary field
+                    .map(|(basic, _, binary, _, _, _)| (basic, binary)) // Changed to access binary field
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -316,8 +498,10 @@ fn main() {
                 println!("{}", table);
             } else {
                 // Show basic info only
-                let basic_info: Vec<Basic> =
-                    files.into_iter().map(|(basic, _, _, _, _)| basic).collect();
+                let basic_info: Vec<Basic> = files
+                    .into_iter()
+                    .map(|(basic, _, _, _, _, _)| basic)
+                    .collect();
                 let mut table = Table::new(basic_info);
                 table.with(Style::empty());
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
@@ -341,7 +525,7 @@ fn get_files(
     directories_only: bool,
     sort: SortField,
     git_ignore: bool,
-) -> Vec<(Basic, Size, Binary, Modified, Permission)> {
+) -> Vec<(Basic, Size, Binary, GroupOwner, Modified, Permission)> {
     let mut entries: Vec<_> = fs::read_dir(path)
         .ok()
         .map(|dir| {
@@ -457,6 +641,7 @@ fn get_files(
                 basic_mode(&file, &meta),
                 size_mode(&meta),
                 binary_mode(&meta),
+                group_and_owner_mode(&meta),
                 modified_mode(&meta),
                 permission_mode(&meta),
             )
@@ -527,6 +712,24 @@ fn permission_mode(meta: &Metadata) -> Permission {
 fn binary_mode(meta: &Metadata) -> Binary {
     Binary {
         size: meta.len().to_string(),
+    }
+}
+
+fn group_and_owner_mode(meta: &Metadata) -> GroupOwner {
+    let cache = UsersCache::new();
+    let uid = meta.uid();
+    let gid = meta.gid();
+
+    GroupOwner {
+        owner: cache
+            .get_user_by_uid(uid)
+            .map(|u| u.name().to_string_lossy().into_owned())
+            .unwrap_or_else(|| uid.to_string()),
+
+        group: cache
+            .get_group_by_gid(gid)
+            .map(|g| g.name().to_string_lossy().into_owned())
+            .unwrap_or_else(|| gid.to_string()),
     }
 }
 
