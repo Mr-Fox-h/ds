@@ -1,9 +1,11 @@
 use chrono::DateTime;
 use chrono::Utc;
 use clap::Parser;
+use clap::ValueEnum;
 use owo_colors::OwoColorize;
 use std::fs::DirEntry;
 use std::fs::Metadata;
+use std::os::unix::fs::MetadataExt;
 use std::os::unix::fs::PermissionsExt;
 use std::{
     fs,
@@ -22,6 +24,20 @@ enum Types {
     Dir,
 }
 
+#[derive(Debug, Clone, ValueEnum)]
+enum SortField {
+    Name,
+    Content,
+    Extension,
+    Modified,
+    Changed,
+    Accessed,
+    Created,
+    Inode,
+    FileType,
+    None,
+}
+
 #[derive(Debug, Tabled, Clone)]
 struct Basic {
     #[tabled(rename = "Name")]
@@ -31,9 +47,9 @@ struct Basic {
 }
 
 #[derive(Debug, Tabled, Clone)]
-struct Size {
-    #[tabled(rename = "Size")]
-    size: String,
+struct Content {
+    #[tabled(rename = "Content")]
+    content: String,
 }
 
 #[derive(Debug, Tabled, Clone)]
@@ -52,18 +68,44 @@ struct Permission {
 #[command(
     version,
     about,
-    long_about = "List information about the FILEs/DIRECTORYs."
+    long_about = "List directory contents with various display options.\n\n\
+    A modern replacement for 'ls' with colorful output and additional features."
 )]
 struct Cli {
     path: Option<PathBuf>,
-    #[arg(short, long)]
+    #[arg(short, long, help = "Show hidden files (starting with '.')")]
     all: bool,
-    #[arg(short, long)]
+    #[arg(short, long, help = "Show file permissions in Unix format")]
     permission: bool,
-    #[arg(short, long)]
-    size: bool,
-    #[arg(short, long)]
+    #[arg(short, long, help = "Show file sizes (content)")]
+    content: bool,
+    #[arg(short, long, help = "Show last modification time")]
     modified_time: bool,
+    #[arg(short, long, help = "Reverse the sort order")]
+    reverse: bool,
+    #[arg(short, long, help = "Show directories only")]
+    dirs: bool,
+    #[arg(
+        short,
+        long,
+        value_enum,
+        default_value = "name",
+        help = "Sort by specific field",
+        long_help = "Sort criteria:\n\
+        - name: Alphabetical order\n\
+        - content: File size\n\
+        - extension: File extension\n\
+        - modified: Last modification time\n\
+        - changed: Last status change time\n\
+        - accessed: Last access time\n\
+        - created: Creation time\n\
+        - inode: Inode number\n\
+        - file-type: Directory first then files\n\
+        - none: No sorting"
+    )]
+    sort: SortField,
+    #[arg(short = None, long = "git-ignore", help = "Respect .gitignore files")]
+    git_ignore: bool,
 }
 
 fn main() {
@@ -73,11 +115,18 @@ fn main() {
     println!("Path: {}", path.display());
     if let Ok(is_exist) = fs::exists(&path) {
         if is_exist {
-            let files = get_files(&path, cli.all);
+            let files = get_files(
+                &path,
+                cli.all,
+                cli.reverse,
+                cli.dirs,
+                cli.sort,
+                cli.git_ignore,
+            );
 
-            if cli.permission && cli.size && cli.modified_time {
+            if cli.permission && cli.content && cli.modified_time {
                 // Show all fields
-                let combined: Vec<(Basic, Size, Modified, Permission)> = files;
+                let combined: Vec<(Basic, Content, Modified, Permission)> = files;
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
@@ -85,11 +134,11 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.permission && cli.size {
-                // Show permission and size
-                let combined: Vec<(Basic, Size, Permission)> = files
+            } else if cli.permission && cli.content {
+                // Show permission and content
+                let combined: Vec<(Basic, Content, Permission)> = files
                     .into_iter()
-                    .map(|(basic, size, _, permission)| (basic, size, permission))
+                    .map(|(basic, content, _, permission)| (basic, content, permission))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -120,11 +169,11 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size && cli.modified_time {
-                // Show size and modified time
-                let combined: Vec<(Basic, Size, Modified)> = files
+            } else if cli.content && cli.modified_time {
+                // Show content and modified time
+                let combined: Vec<(Basic, Content, Modified)> = files
                     .into_iter()
-                    .map(|(basic, size, modified, _)| (basic, size, modified))
+                    .map(|(basic, content, modified, _)| (basic, content, modified))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -132,11 +181,11 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size {
-                // Show only size
-                let combined: Vec<(Basic, Size)> = files
+            } else if cli.content {
+                // Show only content
+                let combined: Vec<(Basic, Content)> = files
                     .into_iter()
-                    .map(|(basic, size, _, _)| (basic, size))
+                    .map(|(basic, content, _, _)| (basic, content))
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
@@ -174,29 +223,118 @@ fn main() {
     }
 }
 
-fn get_files(path: &Path, show_hidden: bool) -> Vec<(Basic, Size, Modified, Permission)> {
-    let mut data = Vec::new();
+fn get_files(
+    path: &Path,
+    show_hidden: bool,
+    reverse: bool,
+    directories_only: bool,
+    sort: SortField,
+    git_ignore: bool,
+) -> Vec<(Basic, Content, Modified, Permission)> {
+    let mut entries: Vec<_> = fs::read_dir(path)
+        .ok()
+        .map(|dir| {
+            dir.filter_map(|entry| {
+                let entry = entry.ok()?;
+                let meta = entry.metadata().ok()?;
+                Some((entry, meta))
+            })
+            .filter(|(entry, meta)| {
+                let file_name = entry.file_name().into_string().unwrap_or_default();
+                (show_hidden || !file_name.starts_with('.'))
+                    && (!directories_only || meta.is_dir())
+                    && (git_ignore && !file_name.eq(".gitignore"))
+            })
+            .collect()
+        })
+        .unwrap_or_default();
 
-    if let Ok(directory) = fs::read_dir(path) {
-        for value in directory {
-            if let Ok(file) = value {
-                if let Ok(meta) = fs::metadata(&file.path()) {
-                    let file_name = file.file_name().into_string().unwrap_or_default();
-
-                    // Skip hidden files until -a
-                    if show_hidden || !file_name.starts_with('.') {
-                        data.push((
-                            basic_mode(&file, &meta),
-                            size_mode(&meta),
-                            modified_mode(&meta),
-                            permission_mode(&meta),
-                        ));
-                    }
-                }
-            }
+    // Sort entries based on the specified field
+    match sort {
+        SortField::Name => {
+            entries.sort_by(|a, b| a.0.file_name().cmp(&b.0.file_name()));
         }
+        SortField::Content => {
+            entries.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
+        }
+        SortField::Extension => {
+            entries.sort_by(|a, b| {
+                let name_a = a.0.file_name();
+                let name_b = b.0.file_name();
+
+                let ext_a = Path::new(&name_a)
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("");
+                let ext_b = Path::new(&name_b)
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("");
+
+                ext_a.cmp(ext_b)
+            });
+        }
+        SortField::Modified => {
+            entries.sort_by(|a, b| {
+                a.1.modified()
+                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+                    .cmp(&b.1.modified().unwrap_or(std::time::SystemTime::UNIX_EPOCH))
+            });
+        }
+        SortField::Changed => {
+            entries.sort_by(|a, b| {
+                a.1.accessed()
+                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+                    .cmp(&b.1.accessed().unwrap_or(std::time::SystemTime::UNIX_EPOCH))
+            });
+        }
+        SortField::Accessed => {
+            entries.sort_by(|a, b| {
+                a.1.created()
+                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+                    .cmp(&b.1.created().unwrap_or(std::time::SystemTime::UNIX_EPOCH))
+            });
+        }
+        SortField::Created => {
+            entries.sort_by(|a, b| {
+                a.1.created()
+                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH)
+                    .cmp(&b.1.created().unwrap_or(std::time::SystemTime::UNIX_EPOCH))
+            });
+        }
+        SortField::Inode => {
+            entries.sort_by(|a, b| a.1.ino().cmp(&b.1.ino()));
+        }
+        SortField::FileType => {
+            entries.sort_by(|a, b| {
+                let a_type = a.1.file_type();
+                let b_type = b.1.file_type();
+
+                match (a_type.is_dir(), b_type.is_dir()) {
+                    (true, false) => std::cmp::Ordering::Less,
+                    (false, true) => std::cmp::Ordering::Greater,
+                    _ => a.0.file_name().cmp(&b.0.file_name()),
+                }
+            });
+        }
+        SortField::None => {}
     }
-    data
+
+    if reverse {
+        entries.reverse();
+    }
+
+    entries
+        .into_iter()
+        .map(|(file, meta)| {
+            (
+                basic_mode(&file, &meta),
+                content_mode(&meta),
+                modified_mode(&meta),
+                permission_mode(&meta),
+            )
+        })
+        .collect()
 }
 
 fn basic_mode(file: &DirEntry, meta: &Metadata) -> Basic {
@@ -213,9 +351,9 @@ fn basic_mode(file: &DirEntry, meta: &Metadata) -> Basic {
     }
 }
 
-fn size_mode(meta: &Metadata) -> Size {
-    Size {
-        size: human_readable_size(meta.len()),
+fn content_mode(meta: &Metadata) -> Content {
+    Content {
+        content: human_readable_content(meta.len()),
     }
 }
 
@@ -259,20 +397,20 @@ fn permission_mode(meta: &Metadata) -> Permission {
     }
 }
 
-fn human_readable_size(bytes: u64) -> String {
+fn human_readable_content(bytes: u64) -> String {
     const UNITS: [&str; 6] = ["B", "K", "M", "G", "T", "P"];
-    let mut size = bytes as f64;
+    let mut content = bytes as f64;
     let mut unit_index = 0;
 
-    while size >= 1024.0 && unit_index < UNITS.len() - 1 {
-        size /= 1024.0;
+    while content >= 1024.0 && unit_index < UNITS.len() - 1 {
+        content /= 1024.0;
         unit_index += 1;
     }
 
     // Show 1 decimal place only if needed
-    if size >= 10.0 || unit_index == 0 {
-        format!("{:.0}{}", size, UNITS[unit_index])
+    if content >= 10.0 || unit_index == 0 {
+        format!("{:.0}{}", content, UNITS[unit_index])
     } else {
-        format!("{:.1}{}", size, UNITS[unit_index])
+        format!("{:.1}{}", content, UNITS[unit_index])
     }
 }
