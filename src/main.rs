@@ -96,7 +96,11 @@ struct Cli {
     size: bool,
     #[arg(short, long, help = "list file sizes with binary prefixes")]
     binary: bool,
-    #[arg(short = None, long = "og", help = "list each file's group and owenr")]
+    #[arg(
+        short = 'g',
+        long = "group_and_owner",
+        help = "list each file's group and owenr"
+    )]
     group_and_owner: bool,
     #[arg(short, long, help = "Show last modification time")]
     modified_time: bool,
@@ -154,6 +158,7 @@ fn main() {
                 table.modify(Columns::one(4), Color::FG_BLUE);
                 table.modify(Columns::one(5), Color::FG_BLUE);
                 table.modify(Columns::one(6), Color::FG_YELLOW);
+                table.modify(Columns::one(7), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -494,6 +499,17 @@ fn main() {
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.group_and_owner {
+                let combined: Vec<(Basic, Binary)> = files
+                    .into_iter()
+                    .map(|(basic, _, binary, _, _, _)| (basic, binary)) // Changed to access binary field
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BLUE);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
             } else {
