@@ -54,9 +54,13 @@ struct Size {
 }
 
 #[derive(Debug, Tabled, Clone)]
-struct Modified {
-    #[tabled(rename = "Modified")]
+struct MAC {
+    #[tabled(rename = "Date Modified")]
     modified: String,
+    #[tabled(rename = "Date Accessed")]
+    accessed: String,
+    #[tabled(rename = "Date Created")]
+    created: String,
 }
 
 #[derive(Debug, Tabled, Clone)]
@@ -99,11 +103,15 @@ struct Cli {
     #[arg(
         short = 'g',
         long = "group_and_owner",
-        help = "list each file's group and owenr"
+        help = "list each file's group and owner"
     )]
     group_and_owner: bool,
-    #[arg(short, long, help = "Show last modification time")]
-    modified_time: bool,
+    #[arg(
+        short = 't',
+        long = "mac",
+        help = "Show last modification/accessed timestamp/created timestamp time"
+    )]
+    mac: bool,
     #[arg(short, long, help = "Reverse the sort order")]
     reverse: bool,
     #[arg(short, long, help = "Show directories only")]
@@ -147,10 +155,9 @@ fn main() {
                 cli.git_ignore,
             );
 
-            if cli.permission && cli.size && cli.modified_time && cli.binary && cli.group_and_owner
-            {
+            if cli.permission && cli.size && cli.mac && cli.binary && cli.group_and_owner {
                 // Show all fields
-                let combined: Vec<(Basic, Size, Binary, GroupOwner, Modified, Permission)> = files;
+                let combined: Vec<(Basic, Size, Binary, GroupOwner, MAC, Permission)> = files;
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
@@ -162,9 +169,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.permission && cli.size && cli.modified_time && cli.binary {
+            } else if cli.permission && cli.size && cli.mac && cli.binary {
                 // Show all fields
-                let combined: Vec<(Basic, Size, Binary, Modified, Permission)> = files
+                let combined: Vec<(Basic, Size, Binary, MAC, Permission)> = files
                     .into_iter()
                     .map(|(basic, size, binary, _, modified, permission)| {
                         (basic, size, binary, modified, permission)
@@ -178,9 +185,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size && cli.binary && cli.group_and_owner && cli.modified_time {
+            } else if cli.size && cli.binary && cli.group_and_owner && cli.mac {
                 // Show all fields
-                let combined: Vec<(Basic, Size, Binary, GroupOwner, Modified)> = files
+                let combined: Vec<(Basic, Size, Binary, GroupOwner, MAC)> = files
                     .into_iter()
                     .map(|(basic, size, binary, group_and_owner, modified, _)| {
                         (basic, size, binary, group_and_owner, modified)
@@ -212,9 +219,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size && cli.group_and_owner && cli.modified_time && cli.permission {
+            } else if cli.size && cli.group_and_owner && cli.mac && cli.permission {
                 // Show all fields
-                let combined: Vec<(Basic, Size, GroupOwner, Modified, Permission)> = files
+                let combined: Vec<(Basic, Size, GroupOwner, MAC, Permission)> = files
                     .into_iter()
                     .map(|(basic, size, _, group_and_owner, modified, permission)| {
                         (basic, size, group_and_owner, modified, permission)
@@ -229,9 +236,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.binary && cli.group_and_owner && cli.modified_time && cli.permission {
+            } else if cli.binary && cli.group_and_owner && cli.mac && cli.permission {
                 // Show all fields
-                let combined: Vec<(Basic, Binary, GroupOwner, Modified, Permission)> = files
+                let combined: Vec<(Basic, Binary, GroupOwner, MAC, Permission)> = files
                     .into_iter()
                     .map(
                         |(basic, _, binary, group_and_owner, modified, permission)| {
@@ -248,9 +255,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size && cli.binary && cli.modified_time {
+            } else if cli.size && cli.binary && cli.mac {
                 // Show size, binary and modifier
-                let combined: Vec<(Basic, Size, Binary, Modified)> = files
+                let combined: Vec<(Basic, Size, Binary, MAC)> = files
                     .into_iter()
                     .map(|(basic, size, binary, _, modified, _)| (basic, size, binary, modified))
                     .collect();
@@ -277,9 +284,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BLUE);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size && cli.group_and_owner && cli.modified_time {
+            } else if cli.size && cli.group_and_owner && cli.mac {
                 // Show size, binary and modifier
-                let combined: Vec<(Basic, Size, GroupOwner, Modified)> = files
+                let combined: Vec<(Basic, Size, GroupOwner, MAC)> = files
                     .into_iter()
                     .map(|(basic, size, _, group_and_owner, modified, _)| {
                         (basic, size, group_and_owner, modified)
@@ -309,9 +316,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.binary && cli.group_and_owner && cli.modified_time {
+            } else if cli.binary && cli.group_and_owner && cli.mac {
                 // Show size, binary and modifier
-                let combined: Vec<(Basic, Binary, GroupOwner, Modified)> = files
+                let combined: Vec<(Basic, Binary, GroupOwner, MAC)> = files
                     .into_iter()
                     .map(|(basic, _, binary, group_and_owner, modified, _)| {
                         (basic, binary, group_and_owner, modified)
@@ -356,9 +363,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size && cli.modified_time && cli.permission {
+            } else if cli.size && cli.mac && cli.permission {
                 // Show size, binary and modifier
-                let combined: Vec<(Basic, Size, Modified, Permission)> = files
+                let combined: Vec<(Basic, Size, MAC, Permission)> = files
                     .into_iter()
                     .map(|(basic, size, _, _, modified, permission)| {
                         (basic, size, modified, permission)
@@ -371,9 +378,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.binary && cli.modified_time && cli.permission {
+            } else if cli.binary && cli.mac && cli.permission {
                 // Show size, binary and modifier
-                let combined: Vec<(Basic, Binary, Modified, Permission)> = files
+                let combined: Vec<(Basic, Binary, MAC, Permission)> = files
                     .into_iter()
                     .map(|(basic, _, binary, _, modified, permission)| {
                         (basic, binary, modified, permission)
@@ -398,9 +405,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.binary && cli.modified_time {
+            } else if cli.binary && cli.mac {
                 // Show size and binary
-                let combined: Vec<(Basic, Binary, Modified)> = files
+                let combined: Vec<(Basic, Binary, MAC)> = files
                     .into_iter()
                     .map(|(basic, _, binary, _, modified, _)| (basic, binary, modified))
                     .collect();
@@ -434,9 +441,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.permission && cli.modified_time {
+            } else if cli.permission && cli.mac {
                 // Show permission and modified time
-                let combined: Vec<(Basic, Modified, Permission)> = files
+                let combined: Vec<(Basic, MAC, Permission)> = files
                     .into_iter()
                     .map(|(basic, _, _, _, modified, permission)| (basic, modified, permission))
                     .collect();
@@ -457,9 +464,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.size && cli.modified_time {
+            } else if cli.size && cli.mac {
                 // Show size and modified time
-                let combined: Vec<(Basic, Size, Modified)> = files
+                let combined: Vec<(Basic, Size, MAC)> = files
                     .into_iter()
                     .map(|(basic, size, _, _, modified, _)| (basic, size, modified))
                     .collect();
@@ -480,9 +487,9 @@ fn main() {
                 table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
-            } else if cli.modified_time {
+            } else if cli.mac {
                 // Show only modified time
-                let combined: Vec<(Basic, Modified)> = files
+                let combined: Vec<(Basic, MAC)> = files
                     .into_iter()
                     .map(|(basic, _, _, _, modified, _)| (basic, modified))
                     .collect();
@@ -541,7 +548,7 @@ fn get_files(
     directories_only: bool,
     sort: SortField,
     git_ignore: bool,
-) -> Vec<(Basic, Size, Binary, GroupOwner, Modified, Permission)> {
+) -> Vec<(Basic, Size, Binary, GroupOwner, MAC, Permission)> {
     let mut entries: Vec<_> = fs::read_dir(path)
         .ok()
         .map(|dir| {
@@ -658,7 +665,7 @@ fn get_files(
                 size_mode(&meta),
                 binary_mode(&meta),
                 group_and_owner_mode(&meta),
-                modified_mode(&meta),
+                mac_mode(&meta),
                 permission_mode(&meta),
             )
         })
@@ -685,10 +692,23 @@ fn size_mode(meta: &Metadata) -> Size {
     }
 }
 
-fn modified_mode(meta: &Metadata) -> Modified {
-    Modified {
+fn mac_mode(meta: &Metadata) -> MAC {
+    MAC {
         modified: if let Ok(modi) = meta.modified() {
             let date: DateTime<Utc> = modi.into();
+            format!("{}", date.format("%a %b %e %Y"))
+        } else {
+            String::default()
+        },
+
+        accessed: if let Ok(access) = meta.accessed() {
+            let date: DateTime<Utc> = access.into();
+            format!("{}", date.format("%a %b %e %Y"))
+        } else {
+            String::default()
+        },
+        created: if let Ok(created) = meta.created() {
+            let date: DateTime<Utc> = created.into();
             format!("{}", date.format("%a %b %e %Y"))
         } else {
             String::default()
