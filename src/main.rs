@@ -92,30 +92,14 @@ struct GroupOwner {
 )]
 struct Cli {
     path: Option<PathBuf>,
-    #[arg(short, long, help = "Show hidden files (starting with '.')")]
+
+    /// Filtering options
+    #[arg(short, long, help = "Show hidden files (starting with '.')", help_heading = Some("FILTERING OPTIONS"))]
     all: bool,
-    #[arg(short, long, help = "Show file permissions in Unix format")]
-    permission: bool,
-    #[arg(short, long, help = "Show file sizes (size)")]
-    size: bool,
-    #[arg(short, long, help = "list file sizes with binary prefixes")]
-    binary: bool,
-    #[arg(
-        short = 'g',
-        long = "group_and_owner",
-        help = "list each file's group and owner"
-    )]
-    group_and_owner: bool,
-    #[arg(
-        short = 't',
-        long = "mac",
-        help = "Show last modification/accessed timestamp/created timestamp time"
-    )]
-    mac: bool,
-    #[arg(short, long, help = "Reverse the sort order")]
-    reverse: bool,
-    #[arg(short, long, help = "Show directories only")]
+    #[arg(short, long, help = "Show directories only", help_heading = Some("FILTERING OPTIONS"))]
     dirs: bool,
+    #[arg(short, long, help = "Reverse the sort order", help_heading = Some("FILTERING OPTIONS"))]
+    reverse: bool,
     #[arg(
         short = 'S',
         long,
@@ -132,11 +116,24 @@ struct Cli {
         - created: Creation time\n\
         - inode: Inode number\n\
         - file-type: Directory first then files\n\
-        - none: No sorting"
+        - none: No sorting",
+        help_heading = Some("FILTERING OPTIONS")
     )]
     sort: SortField,
-    #[arg(short = None, long = "git-ignore", help = "Respect .gitignore files")]
+    #[arg(short = 'i', long = "git-ignore", help = "ignore files mentioned in \'.gitignore\'", help_heading = Some("FILTERING OPTIONS"))]
     git_ignore: bool,
+
+    /// Display options
+    #[arg(short, long, help = "Show file permissions in Unix format", help_heading = Some("DISPLAY OPTIONS"))]
+    permission: bool,
+    #[arg(short, long, help = "Show file sizes (size)", help_heading = Some("DISPLAY OPTIONS"))]
+    size: bool,
+    #[arg(short, long, help = "list file sizes with binary prefixes", help_heading = Some("DISPLAY OPTIONS"))]
+    binary: bool,
+    #[arg(short = 'g', long = "group_and_owner", help = "list each file's group and owner", help_heading = Some("DISPLAY OPTIONS"))]
+    group_and_owner: bool,
+    #[arg(short = 't', long = "mac", help = "Show last MAC (modification/accessed/created) timestamp time", help_heading = Some("DISPLAY OPTIONS"))]
+    mac: bool,
 }
 
 fn main() {
@@ -166,6 +163,7 @@ fn main() {
                 table.modify(Columns::one(5), Color::FG_BLUE);
                 table.modify(Columns::one(6), Color::FG_YELLOW);
                 table.modify(Columns::one(7), Color::FG_YELLOW);
+                table.modify(Columns::one(8), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -182,6 +180,8 @@ fn main() {
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
+                table.modify(Columns::one(6), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -199,6 +199,8 @@ fn main() {
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_BLUE);
                 table.modify(Columns::one(5), Color::FG_BLUE);
+                table.modify(Columns::one(6), Color::FG_YELLOW);
+                table.modify(Columns::one(7), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -233,6 +235,8 @@ fn main() {
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
                 table.modify(Columns::one(5), Color::FG_YELLOW);
+                table.modify(Columns::one(6), Color::FG_YELLOW);
+                table.modify(Columns::one(7), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -252,6 +256,8 @@ fn main() {
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
                 table.modify(Columns::one(5), Color::FG_YELLOW);
+                table.modify(Columns::one(6), Color::FG_YELLOW);
+                table.modify(Columns::one(7), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -265,6 +271,8 @@ fn main() {
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(4), Color::FG_YELLOW);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -297,6 +305,8 @@ fn main() {
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
+                table.modify(Columns::one(6), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -329,6 +339,8 @@ fn main() {
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
+                table.modify(Columns::one(6), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -375,6 +387,8 @@ fn main() {
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
+                table.modify(Columns::one(4), Color::FG_YELLOW);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -390,6 +404,8 @@ fn main() {
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
+                table.modify(Columns::one(4), Color::FG_YELLOW);
+                table.modify(Columns::one(5), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -414,6 +430,8 @@ fn main() {
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_YELLOW);
+                table.modify(Columns::one(4), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -450,6 +468,8 @@ fn main() {
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_YELLOW);
+                table.modify(Columns::one(3), Color::FG_YELLOW);
+                table.modify(Columns::one(4), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -473,6 +493,8 @@ fn main() {
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_YELLOW);
+                table.modify(Columns::one(4), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -495,6 +517,8 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(2), Color::FG_YELLOW);
+                table.modify(Columns::one(3), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
