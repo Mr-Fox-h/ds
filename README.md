@@ -1,11 +1,10 @@
 # ds - A modern directory lister
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Rust](https://github.com/yourusername/ds/actions/workflows/rust.yml/badge.svg)](https://github.com/yourusername/ds/actions/workflows/rust.yml)
 
 `ds` (Directory List) is a fast, modern replacement for the `ls` command, written in Rust. It provides colorful output, additional file information, and customizable display options while maintaining compatibility with traditional `ls` usage patterns.
 
-![Demo Screenshot](screenshot.png) *(replace with actual screenshot)*
+![Demo Screenshot](./photo/2025-07-27-193214_hyprshot.jpg) *(replace with actual screenshot)*
 
 ## Features
 
@@ -20,4 +19,5 @@
 
 ### From source (requires Rust toolchain)
 ```bash
-cargo install --git https://github.com/Mr-Fox-h/ds 
+$ cargo install --git https://github.com/Mr-Fox-h/ds 
+```
