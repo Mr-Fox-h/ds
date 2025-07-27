@@ -4,7 +4,7 @@
 
 `ds` (Directory List) is a fast, modern replacement for the `ls` command, written in Rust. It provides colorful output, additional file information, and customizable display options while maintaining compatibility with traditional `ls` usage patterns.
 
-![Demo Screenshot](./photo/2025-07-27-193214_hyprshot.jpg) *(replace with actual screenshot)*
+![Demo Screenshot](./photo/2025-07-27-193214_hyprshot.jpg)
 
 ## Features
 
