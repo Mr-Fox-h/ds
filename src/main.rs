@@ -93,7 +93,7 @@ struct GroupOwner {
 struct Cli {
     path: Option<PathBuf>,
 
-    /// Filtering options
+    // Filtering options
     #[arg(short, long, help = "Show hidden files (starting with '.')", help_heading = Some("FILTERING OPTIONS"))]
     all: bool,
     #[arg(short, long, help = "Show directories only", help_heading = Some("FILTERING OPTIONS"))]
@@ -123,7 +123,7 @@ struct Cli {
     #[arg(short = 'i', long = "git-ignore", help = "ignore files mentioned in \'.gitignore\'", help_heading = Some("FILTERING OPTIONS"))]
     git_ignore: bool,
 
-    /// Display options
+    // Display options
     #[arg(short, long, help = "Show file permissions in Unix format", help_heading = Some("DISPLAY OPTIONS"))]
     permission: bool,
     #[arg(short, long, help = "Show file sizes (size)", help_heading = Some("DISPLAY OPTIONS"))]
@@ -157,6 +157,7 @@ fn main() {
                 let combined: Vec<(Basic, Size, Binary, GroupOwner, MAC, Permission)> = files;
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -177,6 +178,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
@@ -195,6 +197,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -214,6 +217,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -231,6 +235,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -252,6 +257,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -269,6 +275,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
@@ -286,6 +293,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -302,6 +310,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -320,6 +329,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -336,6 +346,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -354,6 +365,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BLUE);
                 table.modify(Columns::one(4), Color::FG_BLUE);
@@ -370,6 +382,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
@@ -385,6 +398,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
@@ -402,6 +416,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
@@ -417,6 +432,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
@@ -429,6 +445,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
@@ -443,6 +460,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
@@ -455,6 +473,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
@@ -467,20 +486,10 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
-                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
-                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
-                println!("{}", table);
-            } else if cli.permission {
-                // Show only permission
-                let combined: Vec<(Basic, Permission)> = files
-                    .into_iter()
-                    .map(|(basic, _, _, _, _, permission)| (basic, permission))
-                    .collect();
-                let mut table = Table::new(combined);
-                table.with(Style::empty());
                 table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -492,10 +501,69 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
                 table.modify(Columns::one(4), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.size && cli.group_and_owner {
+                // show size and grop/owner
+                let combined: Vec<(Basic, Size, GroupOwner)> = files
+                    .into_iter()
+                    .map(|(basic, size, _, group_and_owner, _, _)| (basic, size, group_and_owner))
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BLUE);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.binary && cli.group_and_owner {
+                // show size and grop/owner
+                let combined: Vec<(Basic, Binary, GroupOwner)> = files
+                    .into_iter()
+                    .map(|(basic, _, binary, group_and_owner, _, _)| {
+                        (basic, binary, group_and_owner)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
+                table.modify(Columns::one(2), Color::FG_BRIGHT_YELLOW);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BLUE);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.permission && cli.group_and_owner {
+                // show size and grop/owner
+                let combined: Vec<(Basic, GroupOwner, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, _, _, group_and_owner, _, permission)| {
+                        (basic, group_and_owner, permission)
+                    })
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
+                table.modify(Columns::one(2), Color::FG_BLUE);
+                table.modify(Columns::one(3), Color::FG_BLUE);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
+                table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
+                println!("{}", table);
+            } else if cli.permission {
+                // Show only permission
+                let combined: Vec<(Basic, Permission)> = files
+                    .into_iter()
+                    .map(|(basic, _, _, _, _, permission)| (basic, permission))
+                    .collect();
+                let mut table = Table::new(combined);
+                table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
+                table.modify(Columns::last(), Color::FG_BRIGHT_GREEN);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
             } else if cli.size {
@@ -506,6 +574,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -517,6 +586,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::one(2), Color::FG_YELLOW);
                 table.modify(Columns::one(3), Color::FG_YELLOW);
                 table.modify(Columns::last(), Color::FG_YELLOW);
@@ -529,17 +599,19 @@ fn main() {
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Columns::last(), Color::FG_BRIGHT_YELLOW);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
             } else if cli.group_and_owner {
-                let combined: Vec<(Basic, Binary)> = files
+                let combined: Vec<(Basic, GroupOwner)> = files
                     .into_iter()
-                    .map(|(basic, _, binary, _, _, _)| (basic, binary)) // Changed to access binary field
+                    .map(|(basic, _, _, group_and_owner, _, _)| (basic, group_and_owner)) // Changed to access binary field
                     .collect();
                 let mut table = Table::new(combined);
                 table.with(Style::empty());
-                table.modify(Columns::one(4), Color::FG_BLUE);
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
+                table.modify(Columns::one(2), Color::FG_BLUE);
                 table.modify(Columns::last(), Color::FG_BLUE);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
@@ -551,6 +623,7 @@ fn main() {
                     .collect();
                 let mut table = Table::new(basic_info);
                 table.with(Style::empty());
+                table.modify(Columns::one(1), Color::FG_MAGENTA);
                 table.modify(Rows::first(), Color::FG_BRIGHT_BLACK);
                 println!("{}", table);
             }
@@ -584,13 +657,8 @@ fn get_files(
             .filter(|(entry, meta)| {
                 let file_name = entry.file_name().into_string().unwrap_or_default();
 
-                if directories_only && meta.is_dir() {
-                    if show_hidden && file_name.starts_with('.') {
-                        return true;
-                    } else if !show_hidden && file_name.starts_with('.') {
-                        return false;
-                    }
-                    return true;
+                if directories_only && meta.is_file() {
+                    return false;
                 }
                 if show_hidden && file_name.starts_with('.') {
                     if git_ignore && file_name.eq(".gitignore") {
